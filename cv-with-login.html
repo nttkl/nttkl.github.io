@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nattakul — CV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #111110;
+    --ink-2: #3a3a38;
+    --ink-3: #787874;
+    --rule: #e5e4df;
+    --bg: #f7f6f2;
+    --bg-card: #ffffff;
+    --accent: #1a6b4a;
+    --accent-light: #e8f4ef;
+    --tag-bg: #f0efe9;
+    --tag-text: #4a4a46;
+    --radius: 16px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.05);
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ═══════════════════════════════════════
+     LOGIN SCREEN
+  ═══════════════════════════════════════ */
+  #login-screen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    padding: 24px;
+    animation: fadeIn .3s ease;
+  }
+  #login-screen.hiding {
+    animation: fadeOut .4s ease forwards;
+  }
+  @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+  .login-card {
+    background: var(--bg-card);
+    border-radius: 24px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.04), 0 20px 60px rgba(0,0,0,.10);
+    padding: 40px 32px 36px;
+    width: 100%; max-width: 400px;
+    position: relative;
+    overflow: hidden;
+  }
+  .login-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), #4db88a);
+  }
+  .login-avatar {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, #1a6b4a, #4db88a);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px; color: #fff;
+    margin: 0 auto 20px;
+  }
+  .login-heading {
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .login-heading h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px; color: var(--ink);
+    letter-spacing: -0.3px;
+  }
+  .login-heading p {
+    font-size: 13px; color: var(--ink-3);
+    margin-top: 4px; font-weight: 300;
+  }
+  .login-divider {
+    height: 1px; background: var(--rule);
+    margin: 22px 0;
+  }
+  .field-group { margin-bottom: 14px; }
+  .field-label {
+    font-size: 11px; font-weight: 500;
+    letter-spacing: .07em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 6px;
+    display: block;
+  }
+  .field-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--rule);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--ink);
+    background: var(--bg);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26,107,74,.08);
+  }
+  .field-input::placeholder { color: #bbb; }
+
+  .login-btn {
+    width: 100%; padding: 13px;
+    background: var(--accent);
+    color: #fff; border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: opacity .15s, transform .1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .login-btn:hover { opacity: .9; }
+  .login-btn:active { transform: scale(.98); }
+  .login-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+  .login-error {
+    font-size: 13px; color: #c0392b;
+    background: #fdf0ef;
+    border: 1px solid #f5c6c2;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 12px;
+    display: none;
+  }
+  .login-error.show { display: block; }
+  .login-note {
+    font-size: 12px; color: var(--ink-3);
+    text-align: center; margin-top: 16px;
+    font-weight: 300; line-height: 1.5;
+  }
+
+  /* spinner */
+  .spin {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    display: none;
+  }
+  .spin.active { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ═══════════════════════════════════════
+     ADMIN LOG PANEL (owner only)
+  ═══════════════════════════════════════ */
+  #log-panel {
+    position: fixed; bottom: 16px; right: 16px;
+    z-index: 500;
+    display: none;
+  }
+  #log-panel.visible { display: block; }
+
+  .log-fab {
+    width: 48px; height: 48px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #fff;
+    box-shadow: 0 4px 12px rgba(26,107,74,.35);
+    transition: transform .15s;
+    position: relative;
+  }
+  .log-fab:hover { transform: scale(1.08); }
+  .log-fab .log-badge {
+    position: absolute; top: -4px; right: -4px;
+    background: #e74c3c; color: #fff;
+    font-size: 10px; font-weight: 600;
+    min-width: 18px; height: 18px;
+    border-radius: 100px; padding: 0 4px;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--bg);
+  }
+
+  .log-drawer {
+    position: fixed; bottom: 0; right: 0; left: 0;
+    background: var(--bg-card);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 30px rgba(0,0,0,.12);
+    max-height: 70vh; overflow: hidden;
+    display: flex; flex-direction: column;
+    transform: translateY(100%);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    z-index: 600;
+  }
+  .log-drawer.open { transform: translateY(0); }
+  .log-drawer-handle {
+    width: 40px; height: 4px;
+    background: var(--rule); border-radius: 100px;
+    margin: 12px auto 0;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .log-drawer-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--rule);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .log-drawer-title {
+    font-size: 14px; font-weight: 500; color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .log-drawer-actions {
+    display: flex; gap: 8px;
+  }
+  .log-action-btn {
+    font-size: 11px; font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 6px; border: 1px solid var(--rule);
+    background: var(--tag-bg); color: var(--ink-3);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background .15s;
+  }
+  .log-action-btn:hover { background: var(--rule); }
+  .log-action-btn.danger { color: #c0392b; border-color: #f5c6c2; }
+  .log-action-btn.danger:hover { background: #fdf0ef; }
+
+  .log-list {
+    overflow-y: auto; flex: 1;
+    padding: 8px 0 20px;
+  }
+  .log-empty {
+    padding: 40px 20px;
+    text-align: center;
+    font-size: 13px; color: var(--ink-3);
+    font-weight: 300;
+  }
+  .log-item {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 36px 1fr auto;
+    gap: 8px; align-items: start;
+  }
+  .log-item:last-child { border-bottom: none; }
+  .log-dot {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--accent-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .log-name { font-size: 14px; font-weight: 500; color: var(--ink); }
+  .log-meta { font-size: 12px; color: var(--ink-3); margin-top: 2px; font-weight: 300; }
+  .log-time { font-size: 11px; color: var(--ink-3); text-align: right; white-space: nowrap; padding-top: 3px; }
+
+  /* overlay for drawer */
+  .log-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.3);
+    z-index: 590; display: none;
+  }
+  .log-overlay.show { display: block; }
+
+  /* ═══════════════════════════════════════
+     CV CONTENT (same as before)
+  ═══════════════════════════════════════ */
+  #cv-content { display: none; }
+  #cv-content.visible { display: block; }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px 100px;
+  }
+  .hero {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 36px 28px 32px;
+    margin-bottom: 16px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), #4db88a);
+  }
+  .hero-top { display: flex; align-items: flex-start; gap: 20px; margin-bottom: 20px; }
+  .avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, #1a6b4a 0%, #4db88a 100%);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px; color: #fff; letter-spacing: -1px;
+  }
+  .hero-name { flex: 1; }
+  .hero-name h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(24px, 6vw, 32px);
+    line-height: 1.1; color: var(--ink); letter-spacing: -0.5px;
+  }
+  .hero-name h1 em { font-style: italic; color: var(--accent); }
+  .hero-title {
+    font-size: 13px; font-weight: 500; color: var(--accent);
+    letter-spacing: 0.08em; text-transform: uppercase; margin-top: 6px;
+  }
+  .hero-bio {
+    font-size: 15px; line-height: 1.65; color: var(--ink-2);
+    font-weight: 300; border-top: 1px solid var(--rule); padding-top: 18px;
+  }
+  .contact-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .contact-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; background: var(--tag-bg);
+    border-radius: 100px; font-size: 13px; color: var(--tag-text);
+    font-weight: 400; text-decoration: none;
+    transition: background .15s, color .15s;
+  }
+  .contact-chip:hover { background: var(--accent-light); color: var(--accent); }
+  .contact-chip svg { width: 14px; height: 14px; opacity: .7; }
+
+  .section {
+    background: var(--bg-card); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 28px; margin-bottom: 16px;
+    opacity: 0; transform: translateY(18px);
+    animation: rise .5s ease forwards;
+  }
+  .section:nth-child(2) { animation-delay: .05s; }
+  .section:nth-child(3) { animation-delay: .10s; }
+  .section:nth-child(4) { animation-delay: .15s; }
+  .section:nth-child(5) { animation-delay: .20s; }
+  .section:nth-child(6) { animation-delay: .25s; }
+  .section:nth-child(7) { animation-delay: .30s; }
+  @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+  .section-label {
+    font-size: 11px; font-weight: 500; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-3);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+
+  .exp-item {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 4px 12px; padding-bottom: 20px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .exp-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+  .exp-role { font-size: 16px; font-weight: 500; color: var(--ink); grid-column: 1; }
+  .exp-period {
+    font-size: 12px; color: var(--ink-3); font-weight: 400;
+    text-align: right; grid-column: 2; grid-row: 1 / 3;
+    padding-top: 3px; white-space: nowrap;
+  }
+  .exp-org { font-size: 13px; color: var(--accent); font-weight: 500; grid-column: 1; }
+  .exp-desc {
+    font-size: 14px; line-height: 1.6; color: var(--ink-2);
+    font-weight: 300; margin-top: 8px; grid-column: 1 / 3;
+  }
+  .exp-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; grid-column: 1 / 3; }
+
+  .tag { font-size: 12px; font-weight: 400; padding: 3px 10px; background: var(--tag-bg); color: var(--tag-text); border-radius: 100px; }
+  .tag.green { background: var(--accent-light); color: var(--accent); }
+
+  .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (min-width: 480px) { .skills-grid { grid-template-columns: 1fr 1fr 1fr; } }
+  .skill-group-label { font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .skill-list { display: flex; flex-direction: column; gap: 4px; }
+  .skill-item { font-size: 13.5px; color: var(--ink-2); font-weight: 400; padding: 5px 0; border-bottom: 1px solid var(--rule); }
+  .skill-item:last-child { border-bottom: none; }
+
+  .project-grid { display: grid; gap: 12px; }
+  .project-card {
+    background: var(--tag-bg); border-radius: 12px;
+    padding: 18px 20px; border: 1px solid var(--rule);
+    transition: border-color .15s, transform .15s;
+  }
+  .project-card:hover { border-color: #c8c8c0; transform: translateY(-1px); }
+  .project-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+  .project-title .badge { font-size: 11px; padding: 2px 8px; background: var(--accent-light); color: var(--accent); border-radius: 100px; font-weight: 500; }
+  .project-desc { font-size: 13.5px; line-height: 1.55; color: var(--ink-3); font-weight: 300; margin-bottom: 10px; }
+
+  .edu-item { display: flex; gap: 14px; align-items: flex-start; padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--rule); }
+  .edu-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+  .edu-dot { width: 36px; height: 36px; background: var(--accent-light); border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .edu-degree { font-size: 15px; font-weight: 500; color: var(--ink); }
+  .edu-school { font-size: 13px; color: var(--accent); margin-top: 2px; }
+  .edu-year { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+  .lang-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .lang-row:last-child { margin-bottom: 0; }
+  .lang-name { font-size: 14px; font-weight: 500; width: 80px; flex-shrink: 0; }
+  .lang-bar-track { flex: 1; height: 5px; background: var(--rule); border-radius: 100px; overflow: hidden; }
+  .lang-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #4db88a); border-radius: 100px; transform-origin: left; animation: grow .8s .4s ease both; }
+  @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .lang-level { font-size: 12px; color: var(--ink-3); width: 60px; text-align: right; }
+
+  .cv-footer { text-align: center; padding: 20px 0 0; font-size: 12px; color: var(--ink-3); letter-spacing: .04em; }
+  .cv-footer a { color: var(--accent); text-decoration: none; }
+
+  /* visitor welcome banner */
+  .visitor-banner {
+    background: var(--accent-light);
+    border: 1px solid rgba(26,107,74,.15);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--accent);
+    display: flex; align-items: center; gap: 10px;
+    animation: rise .4s ease both;
+  }
+
+  @media print {
+    body { background: white; }
+    .section, .hero { box-shadow: none; border: 1px solid #eee; }
+    #log-panel { display: none !important; }
+    .visitor-banner { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-avatar">NK</div>
+    <div class="login-heading">
+      <h2>Nattakul's CV</h2>
+      <p>Please introduce yourself to continue</p>
+    </div>
+    <div class="login-divider"></div>
+
+    <div class="field-group">
+      <label class="field-label" for="inp-name">Your name</label>
+      <input class="field-input" id="inp-name" type="text" placeholder="e.g. Somchai Jaidee" autocomplete="name">
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="inp-org">Organisation / Company</label>
+      <input class="field-input" id="inp-org" type="text" placeholder="e.g. Bangkok Hospital, MOPH">
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="inp-reason">Purpose of visit</label>
+      <input class="field-input" id="inp-reason" type="text" placeholder="e.g. Recruiting, Collaboration, Reference">
+    </div>
+
+    <button class="login-btn" id="login-btn" onclick="doLogin()">
+      <span id="btn-text">View CV</span>
+      <div class="spin" id="btn-spin"></div>
+    </button>
+
+    <div class="login-error" id="login-error"></div>
+    <p class="login-note">Your visit will be logged. This CV is private.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CV CONTENT
+══════════════════════════════════ -->
+<div id="cv-content">
+  <div class="page">
+
+    <div class="visitor-banner" id="visitor-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span id="visitor-welcome-text">Welcome</span>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero" style="animation: rise .4s ease both;">
+      <div class="hero-top">
+        <div class="avatar">NK</div>
+        <div class="hero-name">
+          <h1>Nattakul<br><em>Kaewkham</em></h1>
+          <div class="hero-title">Full-Stack Developer · Healthcare IT</div>
+        </div>
+      </div>
+      <p class="hero-bio">
+        Full-stack web developer specialising in healthcare information systems and Ministry of Public Health digital platforms. Passionate about bridging clinical workflows with modern web technology — building tools that doctors, nurses, and administrators actually want to use.
+      </p>
+      <div class="contact-row">
+        <a class="contact-chip" href="mailto:nattakul@example.com">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+          nattakul@example.com
+        </a>
+        <a class="contact-chip" href="tel:+66800000000">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.06 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17z"/></svg>
+          +66 80 000 0000
+        </a>
+        <a class="contact-chip" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          github.com/nattakul
+        </a>
+        <a class="contact-chip" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Nakhon Ratchasima, TH
+        </a>
+      </div>
+    </div>
+
+    <!-- EXPERIENCE -->
+    <div class="section">
+      <div class="section-label">Experience</div>
+      <div class="exp-item">
+        <div class="exp-role">Senior Full-Stack Developer</div>
+        <div class="exp-period">2022 – Present</div>
+        <div class="exp-org">Health Zone 9 · MOPH Digital Health</div>
+        <div class="exp-desc">Leading development of telemedicine dashboards and hospital information integrations across four provinces in Thailand's northeastern region. Architecting REST API layers, SSO authentication via MOPH Provider ID, and real-time KPI monitoring platforms.</div>
+        <div class="exp-tags">
+          <span class="tag green">Vue.js</span><span class="tag green">Node.js</span>
+          <span class="tag">MS-SQL / HoMC HIS</span><span class="tag">MOPH SSO</span><span class="tag">Tailwind CSS</span>
+        </div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-role">Healthcare IT Developer</div>
+        <div class="exp-period">2019 – 2022</div>
+        <div class="exp-org">Regional Hospital · Nakhon Ratchasima</div>
+        <div class="exp-desc">Built and maintained clinical operations software including outpatient queue management, orthopedic scheduling systems, and tissue specimen tracking integrated with the hospital HIS API.</div>
+        <div class="exp-tags">
+          <span class="tag green">React</span><span class="tag green">PHP / Laravel</span>
+          <span class="tag">HIS API Integration</span><span class="tag">MySQL</span>
+        </div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-role">Frontend Developer</div>
+        <div class="exp-period">2017 – 2019</div>
+        <div class="exp-org">Freelance · Bangkok</div>
+        <div class="exp-desc">Designed and developed web applications for SME clients — e-commerce, dashboards, and internal tools. Established strong foundations in responsive design and performance optimisation.</div>
+        <div class="exp-tags">
+          <span class="tag">JavaScript</span><span class="tag">HTML / CSS</span><span class="tag">WordPress</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="section">
+      <div class="section-label">Key Projects</div>
+      <div class="project-grid">
+        <div class="project-card">
+          <div class="project-title">Telemedicine Dashboard · Zone 9 <span class="badge">Live</span></div>
+          <p class="project-desc">Real-time telemedicine utilisation dashboard for 4 provinces. Province drill-down, KPI tracking, dark/light theme, structured for REST API swap.</p>
+          <div class="exp-tags"><span class="tag">Vue 3</span><span class="tag">Chart.js</span><span class="tag">REST API</span></div>
+        </div>
+        <div class="project-card">
+          <div class="project-title">IPD Electronic Medical Record <span class="badge">In Dev</span></div>
+          <p class="project-desc">Full IPD EMR system with HoMC/MS-SQL integration, MOPH Provider ID SSO, and Thai Ministry of Public Health documentation compliance.</p>
+          <div class="exp-tags"><span class="tag">React</span><span class="tag">MS-SQL</span><span class="tag">SSO</span></div>
+        </div>
+        <div class="project-card">
+          <div class="project-title">MedFin Simulator</div>
+          <p class="project-desc">Financial scenario simulator for Thai hospital executives — 11 revenue sources, 10 expense categories, crisis presets, 3 view modes.</p>
+          <div class="exp-tags"><span class="tag">Vanilla JS</span><span class="tag">Single-file HTML</span></div>
+        </div>
+        <div class="project-card">
+          <div class="project-title">OPD Queue Management System</div>
+          <p class="project-desc">High-volume patient journey & queue management designed for elderly patients using symptom-based language and icon navigation.</p>
+          <div class="exp-tags"><span class="tag">React</span><span class="tag">HIS API</span><span class="tag">Real-time</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SKILLS -->
+    <div class="section">
+      <div class="section-label">Skills</div>
+      <div class="skills-grid">
+        <div>
+          <div class="skill-group-label">Frontend</div>
+          <div class="skill-list">
+            <div class="skill-item">React / Vue 3</div><div class="skill-item">TypeScript</div>
+            <div class="skill-item">Tailwind CSS</div><div class="skill-item">Responsive / Mobile</div>
+          </div>
+        </div>
+        <div>
+          <div class="skill-group-label">Backend</div>
+          <div class="skill-list">
+            <div class="skill-item">Node.js / Express</div><div class="skill-item">PHP / Laravel</div>
+            <div class="skill-item">REST API Design</div><div class="skill-item">MS-SQL / MySQL</div>
+          </div>
+        </div>
+        <div>
+          <div class="skill-group-label">Healthcare IT</div>
+          <div class="skill-list">
+            <div class="skill-item">HoMC HIS</div><div class="skill-item">MOPH SSO / Auth</div>
+            <div class="skill-item">HL7 / FHIR basics</div><div class="skill-item">Clinical Workflows</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDUCATION -->
+    <div class="section">
+      <div class="section-label">Education</div>
+      <div class="edu-item">
+        <div class="edu-dot">🎓</div>
+        <div>
+          <div class="edu-degree">B.Sc. Computer Science</div>
+          <div class="edu-school">Suranaree University of Technology</div>
+          <div class="edu-year">2013 – 2017 · First Class Honours</div>
+        </div>
+      </div>
+      <div class="edu-item">
+        <div class="edu-dot">📜</div>
+        <div>
+          <div class="edu-degree">Digital Health & HIS Certificate</div>
+          <div class="edu-school">Ministry of Public Health Thailand</div>
+          <div class="edu-year">2021</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LANGUAGES -->
+    <div class="section">
+      <div class="section-label">Languages</div>
+      <div class="lang-row">
+        <span class="lang-name">Thai</span>
+        <div class="lang-bar-track"><div class="lang-bar-fill" style="width:100%"></div></div>
+        <span class="lang-level">Native</span>
+      </div>
+      <div class="lang-row">
+        <span class="lang-name">English</span>
+        <div class="lang-bar-track"><div class="lang-bar-fill" style="width:80%"></div></div>
+        <span class="lang-level">Professional</span>
+      </div>
+    </div>
+
+    <div class="cv-footer">Updated May 2026 · <a href="#">Download PDF</a></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     ADMIN LOG PANEL
+══════════════════════════════════ -->
+<div id="log-panel">
+  <div class="log-fab" onclick="openLogDrawer()" title="View visitor log">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    <div class="log-badge" id="log-badge">0</div>
+  </div>
+</div>
+
+<div class="log-overlay" id="log-overlay" onclick="closeLogDrawer()"></div>
+
+<div class="log-drawer" id="log-drawer">
+  <div class="log-drawer-handle" onclick="closeLogDrawer()"></div>
+  <div class="log-drawer-header">
+    <div class="log-drawer-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Visitor Log
+    </div>
+    <div class="log-drawer-actions">
+      <button class="log-action-btn" onclick="exportLog()">Export CSV</button>
+      <button class="log-action-btn danger" onclick="clearLog()">Clear</button>
+    </div>
+  </div>
+  <div class="log-list" id="log-list">
+    <div class="log-empty">No visitors yet.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCRIPT
+══════════════════════════════════ -->
+<script>
+// ── OWNER PASSWORD (change this) ──────────────────────────────────
+const OWNER_PASS = 'nattakul2026';
+// ─────────────────────────────────────────────────────────────────
+
+let visitorLogs = [];
+
+// ── STORAGE HELPERS ───────────────────────────────────────────────
+async function storageSave(logs) {
+  try {
+    await window.storage.set('cv-visitor-log', JSON.stringify(logs), false);
+  } catch(e) { console.warn('Storage save failed', e); }
+}
+
+async function storageLoad() {
+  try {
+    const r = await window.storage.get('cv-visitor-log');
+    return r ? JSON.parse(r.value) : [];
+  } catch(e) { return []; }
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────
+async function doLogin() {
+  const name   = document.getElementById('inp-name').value.trim();
+  const org    = document.getElementById('inp-org').value.trim();
+  const reason = document.getElementById('inp-reason').value.trim();
+  const errEl  = document.getElementById('login-error');
+
+  errEl.classList.remove('show');
+
+  if (!name) { showError('Please enter your name.'); return; }
+  if (!org)  { showError('Please enter your organisation.'); return; }
+
+  // owner bypass — skip logging, show log panel
+  if (name.toLowerCase() === 'owner' && org === OWNER_PASS) {
+    visitorLogs = await storageLoad();
+    renderLogDrawer();
+    document.getElementById('log-panel').classList.add('visible');
+    revealCV('Hi, welcome back! 👋', false);
+    return;
+  }
+
+  // regular visitor — validate with Claude
+  setLoading(true);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `A visitor is trying to access a private CV website.
+Name: "${name}"
+Organisation: "${org}"
+Purpose: "${reason || 'not specified'}"
+
+Check if this looks like a real person with a plausible reason to view a developer's CV (recruiter, hiring manager, colleague, collaborator, reference check, etc). Reject clearly fake or joke entries (e.g. name="asdf", org="hahaha").
+
+Respond ONLY with valid JSON, no markdown:
+{
+  "allowed": true or false,
+  "greeting": "a warm, one-sentence personalised welcome message in English (if allowed) or a polite decline message (if not allowed)",
+  "emoji": "a single relevant emoji"
+}`
+        }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content.map(b => b.text || '').join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+
+    if (!result.allowed) {
+      showError(result.greeting || 'Sorry, your entry does not look valid. Please try again with real information.');
+      setLoading(false);
+      return;
+    }
+
+    // save log
+    const entry = {
+      id: Date.now(),
+      name, org,
+      reason: reason || '—',
+      greeting: result.greeting,
+      emoji: result.emoji || '👤',
+      ts: new Date().toISOString()
+    };
+
+    visitorLogs = await storageLoad();
+    visitorLogs.unshift(entry);
+    await storageSave(visitorLogs);
+
+    revealCV(`${result.emoji} ${result.greeting}`, true);
+
+  } catch(e) {
+    // fallback: allow in if API fails, still log
+    const entry = {
+      id: Date.now(),
+      name, org,
+      reason: reason || '—',
+      greeting: 'Welcome!',
+      emoji: '👤',
+      ts: new Date().toISOString()
+    };
+    visitorLogs = await storageLoad();
+    visitorLogs.unshift(entry);
+    await storageSave(visitorLogs);
+    revealCV(`👤 Welcome, ${name}!`, true);
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.classList.add('show');
+  setLoading(false);
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('login-btn');
+  const txt = document.getElementById('btn-text');
+  const spin = document.getElementById('btn-spin');
+  btn.disabled = on;
+  txt.textContent = on ? 'Checking…' : 'View CV';
+  spin.classList.toggle('active', on);
+}
+
+function revealCV(welcomeMsg, animate) {
+  const screen = document.getElementById('login-screen');
+  screen.classList.add('hiding');
+  setTimeout(() => { screen.style.display = 'none'; }, 380);
+
+  document.getElementById('cv-content').classList.add('visible');
+  document.getElementById('visitor-welcome-text').textContent = welcomeMsg;
+
+  if (!animate) {
+    document.getElementById('visitor-banner').style.display = 'flex';
+  }
+}
+
+// enter key support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') {
+    doLogin();
+  }
+});
+
+// ── LOG DRAWER ────────────────────────────────────────────────────
+function openLogDrawer() {
+  renderLogDrawer();
+  document.getElementById('log-drawer').classList.add('open');
+  document.getElementById('log-overlay').classList.add('show');
+}
+function closeLogDrawer() {
+  document.getElementById('log-drawer').classList.remove('open');
+  document.getElementById('log-overlay').classList.remove('show');
+}
+
+function renderLogDrawer() {
+  const list = document.getElementById('log-list');
+  const badge = document.getElementById('log-badge');
+  badge.textContent = visitorLogs.length;
+
+  if (visitorLogs.length === 0) {
+    list.innerHTML = '<div class="log-empty">No visitors yet.</div>';
+    return;
+  }
+
+  list.innerHTML = visitorLogs.map(v => {
+    const d = new Date(v.ts);
+    const dateStr = d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    const timeStr = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    return `
+      <div class="log-item">
+        <div class="log-dot">${v.emoji || '👤'}</div>
+        <div>
+          <div class="log-name">${escHtml(v.name)}</div>
+          <div class="log-meta">${escHtml(v.org)} · ${escHtml(v.reason)}</div>
+        </div>
+        <div class="log-time">${dateStr}<br>${timeStr}</div>
+      </div>`;
+  }).join('');
+}
+
+async function clearLog() {
+  if (!confirm('Clear all visitor logs?')) return;
+  visitorLogs = [];
+  await storageSave([]);
+  renderLogDrawer();
+}
+
+function exportLog() {
+  const header = 'Name,Organisation,Purpose,Timestamp\n';
+  const rows = visitorLogs.map(v =>
+    `"${v.name}","${v.org}","${v.reason}","${v.ts}"`
+  ).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cv-visitor-log.csv';
+  a.click();
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

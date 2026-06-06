@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Student Evaluation App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans antialiased text-gray-900">
+
+    <div id="app" class="max-w-md mx-auto p-4 sm:max-w-2xl md:max-w-4xl pb-24">
+        
+        <header class="text-center my-6">
+            <h1 class="text-2xl font-bold text-indigo-700">ระบบประเมินการปฏิบัติงาน</h1>
+            <p class="text-sm text-gray-500 mt-1">สำหรับนักศึกษาแพทย์ (Clinical Evaluation)</p>
+        </header>
+
+        <div class="space-y-6">
+            <div v-for="(criterion, cIdx) in rubrics" :key="criterion.id" 
+                 class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 transition-all duration-200"
+                 :class="{'ring-2 ring-indigo-500 border-transparent': assessments[cIdx] !== null}">
+                
+                <div class="flex justify-between items-start mb-3">
+                    <h3 class="font-semibold text-lg text-gray-800">{{ cIdx + 1 }}. {{ criterion.title }}</h3>
+                    <span class="bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+                        น้ำหนัก: {{ criterion.weight }}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-5">
+                    <button 
+                        v-for="level in 5" 
+                        :key="level"
+                        @click="selectScore(cIdx, level)"
+                        type="button"
+                        class="text-left p-3 rounded-xl border transition-all duration-150 flex flex-col justify-between h-full"
+                        :class="assessments[cIdx] === level 
+                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100' 
+                            : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'"
+                    >
+                        <div class="font-bold text-lg mb-1" :class="assessments[cIdx] === level ? 'text-white' : 'text-indigo-600'">
+                            {{ level }} คะแนน
+                        </div>
+                        <div class="text-xs leading-relaxed opacity-90">
+                            {{ criterion.descriptions[level - 1] }}
+                        </div>
+                    </button>
+                </div>
+
+                <div class="mt-3 text-right text-xs text-gray-500" v-if="assessments[cIdx] !== null">
+                    คะแนนถ่วงน้ำหนัก: <span class="font-semibold text-gray-800">{{ (assessments[cIdx] * criterion.weight).toFixed(2) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-xl max-w-md mx-auto sm:max-w-2xl md:max-w-4xl rounded-t-2xl z-50">
+            <div class="grid grid-cols-2 gap-4 items-center mb-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">ชื่อผู้ประเมิน</label>
+                    <input 
+                        type="text" 
+                        v-model="evaluatorName" 
+                        placeholder="ระบุชื่อ-นามสกุล"
+                        class="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                </div>
+
+                <div class="text-right">
+                    <span class="block text-xs font-medium text-gray-500">คะแนนรวมสุทธิ</span>
+                    <span class="text-3xl font-extrabold text-indigo-600 tracking-tight">
+                        {{ totalScore }}
+                    </span>
+                    <span class="text-xs text-gray-400">/ 5.00</span>
+                </div>
+            </div>
+
+            <button 
+                @click="submitEvaluation"
+                :disabled="!isFormValid || isSubmitting"
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-xl transition-colors duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+            >
+                <span v-if="isSubmitting" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                {{ isSubmitting ? 'กำลังบันทึกข้อมูล...' : 'ส่งผลการประเมินเข้า Google Sheet' }}
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        const { createApp, ref, computed } = Vue;
+
+        createApp({
+            setup() {
+                // เปลี่ยน URL ตรงนี้เป็น Web App URL ที่ได้จาก Google Apps Script
+                const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+                // เกณฑ์การประเมิน (น้ำหนักรวมกันต้องได้ 1.0)
+                const rubrics = ref([
+                    {
+                        id: 1,
+                        title: 'History Taking (การซักประวัติ)',
+                        weight: 0.3,
+                        descriptions: [
+                            'ไม่สามารถซักประวัติที่สำคัญได้ ข้อมูลขาดหายมาก',
+                            'ซักประวัติได้บ้าง แต่ข้ามขั้นตอนสำคัญ ไม่เป็นระบบ',
+                            'ซักประวัติได้ครบถ้วนตามมาตรฐาน ลำดับเหตุการณ์ได้ดี',
+                            'ซักประวัติได้ละเอียด ตรงประเด็น และเชื่อมโยงกับโรคได้ดี',
+                            'เชี่ยวชาญสูง ซักประวัติได้ตรงจุดอย่างรวดเร็วและมีจิตวิทยาดีเยี่ยม'
+                        ]
+                    },
+                    {
+                        id: 2,
+                        title: 'Physical Examination (การตรวจร่างกาย)',
+                        weight: 0.3,
+                        descriptions: [
+                            'ตรวจผิดวิธี ไม่ถูกต้องตามหลักวิชาการ',
+                            'ตรวจได้ถูกวิธีบางส่วน แต่ทำได้ไม่ครบถ้วน',
+                            'ตรวจร่างกายได้ถูกต้องครบถ้วนตามระบบที่กำหนด',
+                            'ตรวจได้คล่องแคล่ว ถูกต้อง และนึกถึงความสุขสบายของผู้ป่วย',
+                            'แม่นยำสูงมาก ค้นพบ Sign พิเศษที่ยากได้อย่างถูกต้อง'
+                        ]
+                    },
+                    {
+                        id: 3,
+                        title: 'Clinical Reasoning (การคิดวิเคราะห์ทางคลินิก)',
+                        weight: 0.4,
+                        descriptions: [
+                            'ไม่สามารถตั้งสมมติฐานของโรคได้เลย',
+                            'ตั้งสมมติฐานได้ แต่ไม่สอดคล้องกับอาการผู้ป่วย',
+                            'วินิจฉัยแยกโรคได้สมเหตุสมผลตามข้อมูลที่มี',
+                            'วิเคราะห์โรคได้ลึกซึ้ง มีหลักการอ้างอิงทางวิชาการที่แน่นแฟ้น',
+                            'ตัดสินใจทางคลินิกได้อย่างเฉียบคม แม้ในภาวะซับซ้อนหรือฉุกเฉิน'
+                        ]
+                    }
+                ]);
+
+                // สถานะคะแนนที่เลือกในแต่ละข้อ (เริ่มจาก null)
+                const assessments = ref(new Array(rubrics.value.length).fill(null));
+                const evaluatorName = ref('');
+                const isSubmitting = ref(false);
+
+                // เลือกคะแนน
+                const selectScore = (criterionIndex, score) => {
+                    assessments.value[criterionIndex] = score;
+                };
+
+                // คำนวณคะแนนรวม ($Total = \sum (Score \times Weight)$)
+                const totalScore = computed(() => {
+                    let total = 0;
+                    rubrics.value.forEach((criterion, idx) => {
+                        if (assessments.value[idx] !== null) {
+                            total += assessments.value[idx] * criterion.weight;
+                        }
+                    });
+                    return total.toFixed(2);
+                });
+
+                // ตรวจสอบว่ากรอกข้อมูลครบหรือยัง
+                const isFormValid = computed(() => {
+                    const allScored = assessments.value.every(score => score !== null);
+                    const hasName = evaluatorName.value.trim() !== '';
+                    return allScored && hasName;
+                });
+
+                // ส่งข้อมูลไป Google Sheet
+                const submitEvaluation = async () => {
+                    if (!isFormValid.value) return;
+                    
+                    isSubmitting.value = true;
+
+                    // เตรียม Payload ข้อมูล
+                    const payload = {
+                        evaluatorName: evaluatorName.value,
+                        totalScore: totalScore.value,
+                        scores: rubrics.value.map((item, idx) => ({
+                            title: item.title,
+                            score: assessments.value[idx],
+                            weight: item.weight,
+                            weightedScore: (assessments.value[idx] * item.weight).toFixed(2)
+                        }))
+                    };
+
+                    try {
+                        const response = await fetch(GOOGLE_SCRIPT_URL, {
+                            method: 'POST',
+                            mode: 'no-cors', // จำเป็นสำหรับ Google Apps Script หากไม่ได้ทำ CORS สิทธิ์สมบูรณ์
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        alert('บันทึกผลการประเมินลง Google Sheet สำเร็จแล้ว!');
+                        // Reset ฟอร์มหลังส่งสำเร็จ
+                        assessments.value = new Array(rubrics.value.length).fill(null);
+                        evaluatorName.value = '';
+
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง');
+                    } finally {
+                        isSubmitting.value = false;
+                    }
+                };
+
+                return {
+                    rubrics,
+                    assessments,
+                    evaluatorName,
+                    isSubmitting,
+                    selectScore,
+                    totalScore,
+                    isFormValid,
+                    submitEvaluation
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
